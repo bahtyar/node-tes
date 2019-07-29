@@ -2,6 +2,7 @@
 const express 	= require('express');
 const path 		= require('path');
 const mongoose	= require('mongoose');
+const bodyParser = require('body-parser');
 
 //create connection
 mongoose.connect('mongodb://localhost/nodekb');
@@ -29,6 +30,13 @@ let Article = require('./models/article');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
+//body-parse middleware
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
+
 //home route
 app.get('/', (req, res)=>{	
 	Article.find({},(err,articles)=>{		
@@ -43,6 +51,28 @@ app.get('/', (req, res)=>{
 });
 
 //Add route
-app.get('/articles/add', (req, res)=>res.render('add_article',{title:'Add Articles'}));
+app.get('/articles/add', (req, res)=>{
+	res.render('add_article', {
+		title:'Add Articles'
+	});
+});
+
+//add submit Post route
+app.post('/articles/add',(req,res)=>{
+	let article = new Article();
+	article.title = req.body.title;
+	article.author = req.body.author;
+	article.body = req.body.body;
+
+	article.save((err)=>{
+		if(err){
+			console.log(err);
+			return;
+		}else{
+			res.redirect('/');
+		}
+	});
+});
+
 //start server
 app.listen(port, ()=>console.log(`Example app listening on port ${port}!`));
